@@ -7,7 +7,6 @@ output:
   pdf_document: default
 ---
 
-
 # Set some global options:
 
 tell chunks to be verbose and set the working directory:
