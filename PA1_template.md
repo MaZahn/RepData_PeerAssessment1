@@ -1,4 +1,11 @@
-# Reproducible Research: Peer Assessment 1
+---
+title: 'Reproducible Research: Peer Assessment 1'
+output:
+  html_document:
+    keep_md: no
+    self_contained: no
+  pdf_document: default
+---
 
 
 # Set some global options:
@@ -8,13 +15,14 @@ tell chunks to be verbose and set the working directory:
 ```r
 library("knitr")
 opts_chunk$set(echo = TRUE )
-opts_knit$set(base.dir = 'Assignement1/')
+#opts_knit$set(base.dir = 'Assignement1/')
 ```
 
 ## Loading and preprocessing the data
 
 
-use read.csv to read the data and use strptime to convert date coloumn into date format
+use read.csv to read the data and use strptime to convert date coloumn into 
+date format
 
 
 ```r
@@ -24,12 +32,14 @@ dat$date <- strptime(dat$date, format = "%Y-%m-%d")
 
 ## What is mean total number of steps taken per day?
 
-###Calculate the total number of steps taken per day (ignoring NAs)
-First get the number of days, then sum up the all steps and divide by number of days. NAs are ignored and considered zero steps.
+Calculate the total number of steps taken per day (ignoring NAs)
+First get the number of days, then sum up the all steps and divide by number 
+of days. NAs are ignored and considered zero steps.
 
 
 ```r
-ndays <-  as.numeric(round (difftime( dat$date[length(dat[,2])] , dat$date[1], units = "days") + 1))
+ndays <-  as.numeric(round (difftime( dat$date[length(dat[,2])] , dat$date[1], 
+                                      units = "days") + 1))
 sum(dat$steps, na.rm = T)/ndays 
 ```
 
@@ -37,23 +47,126 @@ sum(dat$steps, na.rm = T)/ndays
 ## [1] 9354.23
 ```
 
-### show the number of steps per day in a histogram (i.e. the  graphical representation of the distribution of numerical data ([see wikipedia](https://en.wikipedia.org/wiki/Histogram))
+Show the number of steps per day in a histogram 
+a histogram is the  graphical 
+representation of the distribution of numerical data 
+[see wikipedia](https://en.wikipedia.org/wiki/Histogram)) included are Mean and Median of the distribution.
 
 
 ```r
 dat.aggr <-aggregate(steps ~ as.character(date), dat, sum)
-hist(dat.aggr$steps, data = dat.aggr$date, breaks = 30, col = "red", xlab = "steps")
+hist(dat.aggr$steps, data = dat.aggr$date, breaks = 30, col = "red", 
+     xlab = "steps", main = "Histogram of steps")
+abline( v = mean(dat.aggr$steps), lty = 1 , col = "blue")
+text(mean(dat.aggr$steps), 8, 
+     labels = paste("mean = ",as.character(round(mean(dat.aggr$steps), 2))), 
+     pos = 4 , col = "blue")
+abline( v = median(dat.aggr$steps), lty = 1 , col = "green")
+text(median(dat.aggr$steps), 8, 
+     labels = paste("median = ",as.character(round(median(dat.aggr$steps), 2))), 
+     pos = 2 , col = "green")
 ```
 
-![](PA1_template_files/figure-html/plothist-1.png)<!-- -->
+![plot of chunk plothist](figure/plothist-1.png)
 
 
 ## What is the average daily activity pattern?
 
+Make a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
+
+```r
+plot(dat$date, dat$steps,type = "l", xlab = "date", ylab = "steps" , 
+     main = "number of steps taken per 5-minute interval")
+abline( h = mean(dat$steps, na.rm = T),  lty = 1, lwd = 5 , col = "red")
+text(dat$date[7500], mean(dat$steps, na.rm = T) , 
+     labels = paste("average steps per 5 min"), pos = 3 , cex = 1.5, col = "red" )
+```
+
+![plot of chunk plotts](figure/plotts-1.png)
+
+and plot the diurnal cycle (day has 288 5 miute intervalls):
+
+
+```r
+dat.aggr <- aggregate(steps ~ interval, dat, mean)
+plot(dat.aggr, xlab = "5 min interval of the day", lwd = 2, type = "l", 
+     col = "grey",     main = "diurnal cycle of 5 minute intervals")
+nmax     <- max(dat.aggr$steps)
+intmaxat <- dat.aggr$interval[dat.aggr$steps == nmax]
+# calcluate hour of the day (12 five min intervals per hour)
+chour    <- as.character(paste (ceiling(104/12), (104%%12) * 5, sep = ":"))
+abline(v=intmaxat, col = "red" )
+text(intmaxat, nmax - 45, pos = 4 , cex = 1, col = "red",
+    labels = paste("max number of steps \nin intervall before: \n", chour, "hh:mm") )
+```
+
+![plot of chunk plotdiurnalcylce](figure/plotdiurnalcylce-1.png)
 
 
 ## Imputing missing values
 
+Calculate the number of missing values in steps: 
 
+```r
+sum(is.na(dat$steps))
+```
+
+```
+## [1] 2304
+```
+copy the data and set NAs to mean:
+
+```r
+newdat <- dat
+newdat$steps[is.na(newdat$steps)] <- mean(newdat$steps, na.rm = TRUE)
+```
+
+redo the histogram plot with the new data:
+
+
+```r
+dat.aggr <-aggregate(steps ~ as.character(date), newdat, sum)
+hist(dat.aggr$steps, data = dat.aggr$date, breaks = 30, col = "red", 
+     xlab = "steps", main = "Histogram of steps")
+abline( v = mean(dat.aggr$steps), lty = 1 , col = "blue")
+text(mean(dat.aggr$steps), 8, 
+     labels = paste("mean = ",as.character(round(mean(dat.aggr$steps), 2))), 
+     pos = 4 , col = "blue")
+abline( v = median(dat.aggr$steps), lty = 1 , col = "green")
+text(median(dat.aggr$steps), 8, 
+     labels = paste("median = ",as.character(round(median(dat.aggr$steps), 2))), 
+     pos = 2 , col = "green")
+```
+
+![plot of chunk plothistnew](figure/plothistnew-1.png)
+
+
+the mean is the same as before, but the median converged towards the mean.
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+use timeDate 
+
+```r
+library(timeDate)
+newdat$wd <- as.factor(ifelse(isWeekday(newdat$date), "weekday","weekend"))
+newdat <- subset( newdat, select = -date )
+dat.aggr <-aggregate(newdat$steps,  by= list(newdat$wd,newdat$interval),
+                     FUN= mean)
+names(dat.aggr) <-c("wd","interval","steps")
+
+subwday <- subset(newdat, wd == "weekday")
+subwend <- subset(newdat, wd == "weekend")
+
+par(mfrow = c(2,1), mar=c(2,2,1,1))
+plt     <- aggregate(steps ~ interval, subwday, mean)
+plot(plt, xlab = "interval", ylab = "number of steps", lwd = 2, type = "l", 
+     col = "grey",     main = "weekdays")
+
+plt     <- aggregate(steps ~ interval, subwend, mean)
+plot(plt, xlab = "interval", ylab = "number of steps",  lwd = 2, type = "l", 
+     col = "grey",     main = "weekends")
+```
+
+![plot of chunk weekdayend](figure/weekdayend-1.png)
+
