@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+
+
+<title>Reproducible Research: Peer Assessment 1</title>
+
+<script src="PA1_template_files/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="PA1_template_files/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="PA1_template_files/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="PA1_template_files/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="PA1_template_files/bootstrap-3.3.5/shim/respond.min.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<link rel="stylesheet"
+      href="PA1_template_files/highlight/default.css"
+      type="text/css" />
+<script src="PA1_template_files/highlight/highlight.js"></script>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs && document.readyState && document.readyState === "complete") {
+   window.setTimeout(function() {
+      hljs.initHighlighting();
+   }, 0);
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script src="PA1_template_files/navigation-1.1/tabsets.js"></script>
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Reproducible Research: Peer Assessment 1</h1>
+
+</div>
+
+
+<div id="set-some-global-options" class="section level1">
+<h1>Set some global options:</h1>
+<p>tell chunks to be verbose and set the working directory:</p>
+<pre class="r"><code>library(&quot;knitr&quot;)
+opts_chunk$set(echo = TRUE )
+#opts_knit$set(base.dir = &#39;Assignement1/&#39;)</code></pre>
+<div id="loading-and-preprocessing-the-data" class="section level2">
+<h2>Loading and preprocessing the data</h2>
+<p>use read.csv to read the data and use strptime to convert date coloumn into date format</p>
+<pre class="r"><code>dat      &lt;- read.csv(file = &quot;activity.csv&quot;)
+dat$date &lt;- strptime(dat$date, format = &quot;%Y-%m-%d&quot;)</code></pre>
+</div>
+<div id="what-is-mean-total-number-of-steps-taken-per-day" class="section level2">
+<h2>What is mean total number of steps taken per day?</h2>
+<p>Calculate the total number of steps taken per day (ignoring NAs) First get the number of days, then sum up the all steps and divide by number of days. NAs are ignored and considered zero steps.</p>
+<pre class="r"><code>ndays &lt;-  as.numeric(round (difftime( dat$date[length(dat[,2])] , dat$date[1], 
+                                      units = &quot;days&quot;) + 1))
+sum(dat$steps, na.rm = T)/ndays </code></pre>
+<pre><code>## [1] 9354.23</code></pre>
+<p>Show the number of steps per day in a histogram a histogram is the graphical representation of the distribution of numerical data <a href="https://en.wikipedia.org/wiki/Histogram">see wikipedia</a>) included are Mean and Median of the distribution.</p>
+<pre class="r"><code>dat.aggr &lt;-aggregate(steps ~ as.character(date), dat, sum)
+hist(dat.aggr$steps, data = dat.aggr$date, breaks = 30, col = &quot;red&quot;, 
+     xlab = &quot;steps&quot;, main = &quot;Histogram of steps&quot;)
+abline( v = mean(dat.aggr$steps), lty = 1 , col = &quot;blue&quot;)
+text(mean(dat.aggr$steps), 8, 
+     labels = paste(&quot;mean = &quot;,as.character(round(mean(dat.aggr$steps), 2))), 
+     pos = 4 , col = &quot;blue&quot;)
+abline( v = median(dat.aggr$steps), lty = 1 , col = &quot;green&quot;)
+text(median(dat.aggr$steps), 8, 
+     labels = paste(&quot;median = &quot;,as.character(round(median(dat.aggr$steps), 2))), 
+     pos = 2 , col = &quot;green&quot;)</code></pre>
+<p><img src="PA1_template_files/figure-html/plothist-1.png" width="672" /></p>
+</div>
+<div id="what-is-the-average-daily-activity-pattern" class="section level2">
+<h2>What is the average daily activity pattern?</h2>
+<p>Make a time series plot (i.e. type = “l”) of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)</p>
+<pre class="r"><code>plot(dat$date, dat$steps,type = &quot;l&quot;, xlab = &quot;date&quot;, ylab = &quot;steps&quot; , 
+     main = &quot;number of steps taken per 5-minute interval&quot;)
+abline( h = mean(dat$steps, na.rm = T),  lty = 1, lwd = 5 , col = &quot;red&quot;)
+text(dat$date[7500], mean(dat$steps, na.rm = T) , 
+     labels = paste(&quot;average steps per 5 min&quot;), pos = 3 , cex = 1.5, col = &quot;red&quot; )</code></pre>
+<p><img src="PA1_template_files/figure-html/plotts-1.png" width="672" /></p>
+<p>and plot the diurnal cycle (day has 288 5 miute intervalls):</p>
+<pre class="r"><code>dat.aggr &lt;- aggregate(steps ~ interval, dat, mean)
+plot(dat.aggr, xlab = &quot;5 min interval of the day&quot;, lwd = 2, type = &quot;l&quot;, 
+     col = &quot;grey&quot;,     main = &quot;diurnal cycle of 5 minute intervals&quot;)
+nmax     &lt;- max(dat.aggr$steps)
+intmaxat &lt;- dat.aggr$interval[dat.aggr$steps == nmax]
+# calcluate hour of the day (12 five min intervals per hour)
+chour    &lt;- as.character(paste (ceiling(104/12), (104%%12) * 5, sep = &quot;:&quot;))
+abline(v=intmaxat, col = &quot;red&quot; )
+text(intmaxat, nmax - 45, pos = 4 , cex = 1, col = &quot;red&quot;,
+    labels = paste(&quot;max number of steps \nin intervall before: \n&quot;, chour, &quot;hh:mm&quot;) )</code></pre>
+<p><img src="PA1_template_files/figure-html/plotdiurnalcylce-1.png" width="672" /></p>
+</div>
+<div id="imputing-missing-values" class="section level2">
+<h2>Imputing missing values</h2>
+<p>Calculate the number of missing values in steps:</p>
+<pre class="r"><code>sum(is.na(dat$steps))</code></pre>
+<pre><code>## [1] 2304</code></pre>
+<p>copy the data and set NAs to mean:</p>
+<pre class="r"><code>newdat &lt;- dat
+newdat$steps[is.na(newdat$steps)] &lt;- mean(newdat$steps, na.rm = TRUE)</code></pre>
+<p>redo the histogram plot with the new data:</p>
+<pre class="r"><code>dat.aggr &lt;-aggregate(steps ~ as.character(date), newdat, sum)
+hist(dat.aggr$steps, data = dat.aggr$date, breaks = 30, col = &quot;red&quot;, 
+     xlab = &quot;steps&quot;, main = &quot;Histogram of steps&quot;)
+abline( v = mean(dat.aggr$steps), lty = 1 , col = &quot;blue&quot;)
+text(mean(dat.aggr$steps), 8, 
+     labels = paste(&quot;mean = &quot;,as.character(round(mean(dat.aggr$steps), 2))), 
+     pos = 4 , col = &quot;blue&quot;)
+abline( v = median(dat.aggr$steps), lty = 1 , col = &quot;green&quot;)
+text(median(dat.aggr$steps), 8, 
+     labels = paste(&quot;median = &quot;,as.character(round(median(dat.aggr$steps), 2))), 
+     pos = 2 , col = &quot;green&quot;)</code></pre>
+<p><img src="PA1_template_files/figure-html/plothistnew-1.png" width="672" /></p>
+<p>the mean is the same as before, but the median converged towards the mean.</p>
+</div>
+<div id="are-there-differences-in-activity-patterns-between-weekdays-and-weekends" class="section level2">
+<h2>Are there differences in activity patterns between weekdays and weekends?</h2>
+<p>use timeDate</p>
+<pre class="r"><code>library(timeDate)
+newdat$wd &lt;- as.factor(ifelse(isWeekday(newdat$date), &quot;weekday&quot;,&quot;weekend&quot;))
+newdat &lt;- subset( newdat, select = -date )
+dat.aggr &lt;-aggregate(newdat$steps,  by= list(newdat$wd,newdat$interval),
+                     FUN= mean)
+names(dat.aggr) &lt;-c(&quot;wd&quot;,&quot;interval&quot;,&quot;steps&quot;)
+
+subwday &lt;- subset(newdat, wd == &quot;weekday&quot;)
+subwend &lt;- subset(newdat, wd == &quot;weekend&quot;)
+
+par(mfrow = c(2,1), mar=c(2,2,1,1))
+plt     &lt;- aggregate(steps ~ interval, subwday, mean)
+plot(plt, xlab = &quot;interval&quot;, ylab = &quot;number of steps&quot;, lwd = 2, type = &quot;l&quot;, 
+     col = &quot;grey&quot;,     main = &quot;weekdays&quot;)
+
+plt     &lt;- aggregate(steps ~ interval, subwend, mean)
+plot(plt, xlab = &quot;interval&quot;, ylab = &quot;number of steps&quot;,  lwd = 2, type = &quot;l&quot;, 
+     col = &quot;grey&quot;,     main = &quot;weekends&quot;)</code></pre>
+<p><img src="PA1_template_files/figure-html/weekdayend-1.png" width="672" /></p>
+</div>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+$(document).ready(function () {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
