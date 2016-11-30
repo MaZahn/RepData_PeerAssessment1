@@ -124,10 +124,11 @@ $(document).ready(function () {
 
 <div id="set-some-global-options" class="section level1">
 <h1>Set some global options:</h1>
-<p>tell chunks to be verbose and set the working directory:</p>
+<p>Tell all chunks to be verbose:</p>
 <pre class="r"><code>library(&quot;knitr&quot;)
 opts_chunk$set(echo = TRUE )
-#opts_knit$set(base.dir = &#39;Assignement1/&#39;)</code></pre>
+# setting working directory causes problems
+# opts_knit$set(base.dir = &#39;Assignement1/&#39;)</code></pre>
 <div id="loading-and-preprocessing-the-data" class="section level2">
 <h2>Loading and preprocessing the data</h2>
 <p>use read.csv to read the data and use strptime to convert date coloumn into date format</p>

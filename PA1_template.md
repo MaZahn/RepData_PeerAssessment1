@@ -9,12 +9,13 @@ output:
 
 # Set some global options:
 
-tell chunks to be verbose and set the working directory:
+Tell all chunks to be verbose:
 
 ```r
 library("knitr")
 opts_chunk$set(echo = TRUE )
-#opts_knit$set(base.dir = 'Assignement1/')
+# setting working directory causes problems
+# opts_knit$set(base.dir = 'Assignement1/')
 ```
 
 ## Loading and preprocessing the data
